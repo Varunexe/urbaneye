@@ -15,6 +15,106 @@ import {
   Gauge
 } from 'lucide-react';
 
+// Mock violation data
+const mockViolations = [
+  {
+    id: 1,
+    plate: 'MH12AB1234',
+    type: 'helmet',
+    location: 'Dadar Junction, Mumbai',
+    timestamp: '2024-01-15 10:30:45',
+    confidence: 0.94,
+    fine: 1000,
+    status: 'notified',
+    evidence: 'https://via.placeholder.com/400x300/dc2626/ffffff?text=No+Helmet+Violation',
+    details: 'Motorcycle rider detected without helmet'
+  },
+  {
+    id: 2,
+    plate: 'DL4CAF5678',
+    type: 'signal',
+    location: 'Connaught Place, Delhi',
+    timestamp: '2024-01-15 11:15:22',
+    confidence: 0.89,
+    fine: 5000,
+    status: 'pending',
+    evidence: 'https://via.placeholder.com/400x300/ea580c/ffffff?text=Signal+Jump+Violation',
+    details: 'Vehicle crossed red signal at intersection'
+  },
+  {
+    id: 3,
+    plate: 'KA05MN9012',
+    type: 'seatbelt',
+    location: 'MG Road, Bangalore',
+    timestamp: '2024-01-15 12:45:30',
+    confidence: 0.91,
+    fine: 1000,
+    status: 'notified',
+    evidence: 'https://via.placeholder.com/400x300/16a34a/ffffff?text=No+Seatbelt+Violation',
+    details: 'Driver detected without seatbelt'
+  },
+  {
+    id: 4,
+    plate: 'TN09CD3456',
+    type: 'lane',
+    location: 'Anna Salai, Chennai',
+    timestamp: '2024-01-15 14:20:15',
+    confidence: 0.87,
+    fine: 500,
+    status: 'processing',
+    evidence: 'https://via.placeholder.com/400x300/d97706/ffffff?text=Lane+Violation',
+    details: 'Vehicle in wrong lane on highway'
+  },
+  {
+    id: 5,
+    plate: 'GJ18EF7890',
+    type: 'speed',
+    location: 'SG Highway, Ahmedabad',
+    timestamp: '2024-01-15 15:10:50',
+    confidence: 0.96,
+    fine: 2000,
+    status: 'notified',
+    evidence: 'https://via.placeholder.com/400x300/2563eb/ffffff?text=Overspeeding+Violation',
+    details: 'Vehicle exceeding speed limit by 25 km/h'
+  },
+  {
+    id: 6,
+    plate: 'UP32GH4567',
+    type: 'helmet',
+    location: 'Hazratganj, Lucknow',
+    timestamp: '2024-01-15 16:30:10',
+    confidence: 0.92,
+    fine: 1000,
+    status: 'pending',
+    evidence: 'https://via.placeholder.com/400x300/dc2626/ffffff?text=No+Helmet+Violation',
+    details: 'Two-wheeler rider without helmet'
+  },
+  {
+    id: 7,
+    plate: 'RJ14IJ8901',
+    type: 'signal',
+    location: 'MI Road, Jaipur',
+    timestamp: '2024-01-15 17:45:33',
+    confidence: 0.88,
+    fine: 5000,
+    status: 'notified',
+    evidence: 'https://via.placeholder.com/400x300/ea580c/ffffff?text=Signal+Jump+Violation',
+    details: 'Red light violation at major intersection'
+  },
+  {
+    id: 8,
+    plate: 'WB22KL2345',
+    type: 'seatbelt',
+    location: 'Park Street, Kolkata',
+    timestamp: '2024-01-15 18:20:45',
+    confidence: 0.90,
+    fine: 1000,
+    status: 'pending',
+    evidence: 'https://via.placeholder.com/400x300/16a34a/ffffff?text=No+Seatbelt+Violation',
+    details: 'Front passenger without seatbelt'
+  }
+];
+
 // Mock data
 const violationTrends = [
   { month: 'Jan', helmet: 45, seatbelt: 23, lane: 18, signal: 67, speed: 34 },
@@ -323,6 +423,8 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [uploadFiles, setUploadFiles] = useState([]);
   const [dragActive, setDragActive] = useState(false);
+  const [selectedViolation, setSelectedViolation] = useState(null);
+  const [filterType, setFilterType] = useState('all');
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart },
@@ -828,9 +930,509 @@ const Dashboard = () => {
     </div>
   );
 
+  const renderViolations = () => {
+    const filteredViolations = filterType === 'all' 
+      ? mockViolations 
+      : mockViolations.filter(v => v.type === filterType);
+
+    const violationTypes = [
+      { id: 'all', label: 'All Violations', count: mockViolations.length },
+      { id: 'helmet', label: 'No Helmet', count: mockViolations.filter(v => v.type === 'helmet').length },
+      { id: 'signal', label: 'Signal Jump', count: mockViolations.filter(v => v.type === 'signal').length },
+      { id: 'seatbelt', label: 'No Seatbelt', count: mockViolations.filter(v => v.type === 'seatbelt').length },
+      { id: 'lane', label: 'Lane Violation', count: mockViolations.filter(v => v.type === 'lane').length },
+      { id: 'speed', label: 'Overspeeding', count: mockViolations.filter(v => v.type === 'speed').length }
+    ];
+
+    const getViolationColor = (type) => {
+      const colors = {
+        helmet: '#dc2626',
+        signal: '#ea580c',
+        seatbelt: '#16a34a',
+        lane: '#d97706',
+        speed: '#2563eb'
+      };
+      return colors[type] || '#6b7280';
+    };
+
+    const getStatusColor = (status) => {
+      const colors = {
+        notified: '#16a34a',
+        pending: '#d97706',
+        processing: '#2563eb'
+      };
+      return colors[status] || '#6b7280';
+    };
+
+    return (
+      <div>
+        {/* Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            ...styles.navigation,
+            marginBottom: '2rem'
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            flexWrap: 'wrap'
+          }}>
+            {violationTypes.map(type => (
+              <button
+                key={type.id}
+                onClick={() => setFilterType(type.id)}
+                style={{
+                  ...styles.navButton,
+                  ...(filterType === type.id ? styles.navButtonActive : {}),
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <span>{type.label}</span>
+                <span style={{
+                  padding: '0.125rem 0.5rem',
+                  borderRadius: '12px',
+                  background: filterType === type.id ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600
+                }}>
+                  {type.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Violations Grid */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+            gap: '1.5rem'
+          }}
+        >
+          {filteredViolations.map((violation, index) => (
+            <motion.div
+              key={violation.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              style={{
+                ...styles.statCard,
+                padding: 0,
+                overflow: 'hidden',
+                cursor: 'pointer'
+              }}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => setSelectedViolation(violation)}
+            >
+              {/* Evidence Thumbnail */}
+              <div style={{
+                width: '100%',
+                height: '200px',
+                background: `url(${violation.evidence}) center/cover`,
+                position: 'relative'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  background: getViolationColor(violation.type),
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  textTransform: 'capitalize'
+                }}>
+                  {violation.type.replace('_', ' ')}
+                </div>
+                <div style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  left: '1rem',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  background: 'rgba(0, 0, 0, 0.7)',
+                  backdropFilter: 'blur(10px)',
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  fontWeight: 600
+                }}>
+                  {Math.floor(violation.confidence * 100)}% confidence
+                </div>
+              </div>
+
+              {/* Violation Details */}
+              <div style={{ padding: '1.5rem' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '1rem'
+                }}>
+                  <div>
+                    <h3 style={{
+                      color: 'white',
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      margin: '0 0 0.25rem 0'
+                    }}>
+                      {violation.plate}
+                    </h3>
+                    <p style={{
+                      color: '#9ca3af',
+                      fontSize: '0.875rem',
+                      margin: 0
+                    }}>
+                      {violation.location}
+                    </p>
+                  </div>
+                  <div style={{
+                    textAlign: 'right'
+                  }}>
+                    <p style={{
+                      color: getStatusColor(violation.status),
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      margin: '0 0 0.25rem 0',
+                      textTransform: 'capitalize'
+                    }}>
+                      {violation.status}
+                    </p>
+                    <p style={{
+                      color: '#ea580c',
+                      fontSize: '1.125rem',
+                      fontWeight: 700,
+                      margin: 0
+                    }}>
+                      ₹{violation.fine.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                <p style={{
+                  color: '#9ca3af',
+                  fontSize: '0.875rem',
+                  margin: '0 0 1rem 0'
+                }}>
+                  {violation.details}
+                </p>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: '#6b7280',
+                  fontSize: '0.75rem'
+                }}>
+                  <Clock size={14} />
+                  <span>{violation.timestamp}</span>
+                </div>
+              </div>
+
+              {/* Action Footer */}
+              <div style={{
+                padding: '1rem 1.5rem',
+                background: 'rgba(255, 255, 255, 0.03)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                display: 'flex',
+                gap: '0.75rem'
+              }}>
+                <button
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'transparent',
+                    color: 'white',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedViolation(violation);
+                  }}
+                >
+                  <Eye size={16} />
+                  View Evidence
+                </button>
+                {violation.status === 'pending' && (
+                  <button
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: '#2563eb',
+                      color: 'white',
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(`SMS sent to vehicle owner for ${violation.plate}`);
+                    }}
+                  >
+                    <Smartphone size={16} />
+                    Send SMS
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Evidence Modal */}
+        <AnimatePresence>
+          {selectedViolation && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.9)',
+                backdropFilter: 'blur(10px)',
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '2rem'
+              }}
+              onClick={() => setSelectedViolation(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                style={{
+                  ...styles.chartCard,
+                  maxWidth: '900px',
+                  width: '100%',
+                  maxHeight: '90vh',
+                  overflow: 'auto'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1.5rem'
+                }}>
+                  <div>
+                    <h2 style={{
+                      color: 'white',
+                      fontSize: '1.75rem',
+                      fontWeight: 700,
+                      margin: '0 0 0.5rem 0'
+                    }}>
+                      Violation Evidence
+                    </h2>
+                    <p style={{
+                      color: '#9ca3af',
+                      margin: 0
+                    }}>
+                      Violation ID: #{selectedViolation.id}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedViolation(null)}
+                    style={{
+                      padding: '0.5rem',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '1.5rem',
+                      lineHeight: 1
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {/* Evidence Image */}
+                <div style={{
+                  width: '100%',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  marginBottom: '1.5rem'
+                }}>
+                  <img
+                    src={selectedViolation.evidence}
+                    alt="Violation Evidence"
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      display: 'block'
+                    }}
+                  />
+                </div>
+
+                {/* Violation Details Grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '1.5rem'
+                }}>
+                  {[
+                    { label: 'License Plate', value: selectedViolation.plate },
+                    { label: 'Violation Type', value: selectedViolation.type.toUpperCase().replace('_', ' ') },
+                    { label: 'Fine Amount', value: `₹${selectedViolation.fine.toLocaleString()}` },
+                    { label: 'Confidence', value: `${Math.floor(selectedViolation.confidence * 100)}%` },
+                    { label: 'Status', value: selectedViolation.status.toUpperCase() },
+                    { label: 'Timestamp', value: selectedViolation.timestamp }
+                  ].map((item, index) => (
+                    <div key={index} style={{
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)'
+                    }}>
+                      <p style={{
+                        color: '#9ca3af',
+                        fontSize: '0.75rem',
+                        margin: '0 0 0.5rem 0',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        {item.label}
+                      </p>
+                      <p style={{
+                        color: 'white',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        margin: 0
+                      }}>
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Additional Info */}
+                <div style={{
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  marginBottom: '1.5rem'
+                }}>
+                  <h3 style={{
+                    color: 'white',
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    margin: '0 0 0.75rem 0'
+                  }}>
+                    Location Details
+                  </h3>
+                  <p style={{
+                    color: '#9ca3af',
+                    margin: '0 0 1rem 0'
+                  }}>
+                    {selectedViolation.location}
+                  </p>
+                  <h3 style={{
+                    color: 'white',
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    margin: '0 0 0.75rem 0'
+                  }}>
+                    Violation Description
+                  </h3>
+                  <p style={{
+                    color: '#9ca3af',
+                    margin: 0
+                  }}>
+                    {selectedViolation.details}
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div style={{
+                  display: 'flex',
+                  gap: '1rem'
+                }}>
+                  <button
+                    style={{
+                      flex: 1,
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      background: 'transparent',
+                      color: 'white',
+                      fontSize: '1rem',
+                      fontWeight: 500,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => alert('Evidence downloaded')}
+                  >
+                    Download Evidence
+                  </button>
+                  {selectedViolation.status === 'pending' && (
+                    <button
+                      style={{
+                        flex: 1,
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: '#2563eb',
+                        color: 'white',
+                        fontSize: '1rem',
+                        fontWeight: 500,
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        alert(`SMS notification sent for ${selectedViolation.plate}`);
+                        setSelectedViolation(null);
+                      }}
+                    >
+                      Send SMS Notification
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   const renderPlaceholder = (title, IconComponent) => {
     if (title === 'Upload Interface') {
       return renderUpload();
+    }
+    if (title === 'Violations Gallery') {
+      return renderViolations();
     }
     return (
       <motion.div
