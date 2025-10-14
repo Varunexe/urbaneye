@@ -15,6 +15,36 @@ import {
   Gauge
 } from 'lucide-react';
 
+// Mock analytics data
+const hourlyData = [
+  { hour: '00:00', violations: 12 },
+  { hour: '03:00', violations: 8 },
+  { hour: '06:00', violations: 45 },
+  { hour: '09:00', violations: 89 },
+  { hour: '12:00', violations: 134 },
+  { hour: '15:00', violations: 156 },
+  { hour: '18:00', violations: 178 },
+  { hour: '21:00', violations: 67 }
+];
+
+const locationData = [
+  { city: 'Mumbai', violations: 458, growth: '+15%' },
+  { city: 'Delhi', violations: 392, growth: '+12%' },
+  { city: 'Bangalore', violations: 334, growth: '+8%' },
+  { city: 'Chennai', violations: 287, growth: '+5%' },
+  { city: 'Ahmedabad', violations: 245, growth: '+18%' },
+  { city: 'Kolkata', violations: 198, growth: '+3%' }
+];
+
+const comparisonData = [
+  { month: 'Jan', current: 1245, previous: 1089 },
+  { month: 'Feb', current: 1389, previous: 1156 },
+  { month: 'Mar', current: 1456, previous: 1298 },
+  { month: 'Apr', current: 1540, previous: 1367 },
+  { month: 'May', current: 1623, previous: 1445 },
+  { month: 'Jun', current: 1687, previous: 1512 }
+];
+
 // Mock violation data
 const mockViolations = [
   {
@@ -1427,12 +1457,394 @@ const Dashboard = () => {
     );
   };
 
+  const renderAnalytics = () => {
+    return (
+      <div>
+        {/* Top Metrics */}
+        <div style={styles.statsGrid}>
+          {[
+            {
+              title: 'Detection Accuracy',
+              value: '94.2%',
+              icon: TrendingUp,
+              color: '#16a34a',
+              trend: '+2.3%',
+              subtitle: 'Last 30 days'
+            },
+            {
+              title: 'Avg Response Time',
+              value: '1.8s',
+              icon: Clock,
+              color: '#2563eb',
+              trend: '-0.4s',
+              subtitle: 'Processing speed'
+            },
+            {
+              title: 'Total Revenue',
+              value: '₹2.4M',
+              icon: TrendingUp,
+              color: '#ea580c',
+              trend: '+18%',
+              subtitle: 'Fines collected'
+            },
+            {
+              title: 'Active Cameras',
+              value: '247',
+              icon: Eye,
+              color: '#d97706',
+              trend: '+12',
+              subtitle: 'Monitoring points'
+            }
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              style={styles.statCard}
+            >
+              <div style={styles.statHeader}>
+                <div style={{ ...styles.statIcon, backgroundColor: `${stat.color}20` }}>
+                  <stat.icon style={{ width: 24, height: 24, color: stat.color }} />
+                </div>
+                <div style={{ ...styles.trend, color: stat.trend.startsWith('+') || stat.trend.startsWith('-0') ? '#16a34a' : '#dc2626' }}>
+                  {stat.trend}
+                </div>
+              </div>
+              <h3 style={styles.statTitle}>{stat.title}</h3>
+              <p style={{ ...styles.statValue, fontSize: '2rem' }}>{stat.value}</p>
+              <p style={{ color: '#6b7280', fontSize: '0.75rem', margin: 0 }}>
+                {stat.subtitle}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Main Charts Section */}
+        <div style={styles.chartsGrid}>
+          {/* Hourly Distribution */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            style={styles.chartCard}
+          >
+            <h3 style={styles.chartTitle}>Hourly Violation Distribution</h3>
+            <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '1rem' }}>
+              Peak hours: 6 PM - 9 PM
+            </p>
+            <div style={styles.chartContainer}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={hourlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="hour" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Bar dataKey="violations" fill="#2563eb" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          {/* Monthly Comparison */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            style={styles.chartCard}
+          >
+            <h3 style={styles.chartTitle}>Monthly Comparison</h3>
+            <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '1rem' }}>
+              Current vs Previous Period
+            </p>
+            <div style={styles.chartContainer}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={comparisonData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="month" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Line type="monotone" dataKey="current" stroke="#16a34a" strokeWidth={3} name="2024" />
+                  <Line type="monotone" dataKey="previous" stroke="#6b7280" strokeWidth={2} strokeDasharray="5 5" name="2023" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: 12, height: 3, background: '#16a34a', borderRadius: 2 }} />
+                <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Current Year</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: 12, height: 3, background: '#6b7280', borderRadius: 2 }} />
+                <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Previous Year</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Location Breakdown */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          style={styles.activityCard}
+        >
+          <h3 style={styles.activityTitle}>Top Violation Locations</h3>
+          <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+            Cities with highest violation counts
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '1rem'
+          }}>
+            {locationData.map((location, index) => (
+              <motion.div
+                key={location.city}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                style={{
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Background bar */}
+                <div style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: `${(location.violations / 500) * 100}%`,
+                  background: 'linear-gradient(90deg, rgba(37, 99, 235, 0.1), transparent)',
+                  transition: 'width 1s ease'
+                }} />
+
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <h4 style={{
+                      color: 'white',
+                      fontSize: '1.125rem',
+                      fontWeight: 600,
+                      margin: 0
+                    }}>
+                      {location.city}
+                    </h4>
+                    <span style={{
+                      color: '#16a34a',
+                      fontSize: '0.875rem',
+                      fontWeight: 600
+                    }}>
+                      {location.growth}
+                    </span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <p style={{
+                      color: '#2563eb',
+                      fontSize: '1.5rem',
+                      fontWeight: 700,
+                      margin: 0
+                    }}>
+                      {location.violations.toLocaleString()}
+                    </p>
+                    <p style={{
+                      color: '#9ca3af',
+                      fontSize: '0.875rem',
+                      margin: 0
+                    }}>
+                      violations
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Violation Type Performance */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          style={styles.activityCard}
+        >
+          <h3 style={styles.activityTitle}>Violation Type Performance</h3>
+          <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+            Detection accuracy by violation category
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '1.5rem'
+          }}>
+            {[
+              { type: 'Signal Jumping', accuracy: 96, count: 529, color: '#dc2626' },
+              { type: 'No Helmet', accuracy: 94, count: 358, color: '#ea580c' },
+              { type: 'Overspeeding', accuracy: 92, count: 294, color: '#d97706' },
+              { type: 'No Seatbelt', accuracy: 89, count: 197, color: '#16a34a' },
+              { type: 'Lane Violation', accuracy: 87, count: 162, color: '#2563eb' }
+            ].map((item, index) => (
+              <motion.div
+                key={item.type}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                style={{
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '1rem'
+                }}>
+                  <div>
+                    <h4 style={{
+                      color: 'white',
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      margin: '0 0 0.25rem 0'
+                    }}>
+                      {item.type}
+                    </h4>
+                    <p style={{
+                      color: '#9ca3af',
+                      fontSize: '0.875rem',
+                      margin: 0
+                    }}>
+                      {item.count} detections
+                    </p>
+                  </div>
+                  <div style={{
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '8px',
+                    background: `${item.color}20`,
+                    color: item.color,
+                    fontSize: '0.875rem',
+                    fontWeight: 700
+                  }}>
+                    {item.accuracy}%
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div style={{
+                  width: '100%',
+                  height: '8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '4px',
+                  overflow: 'hidden'
+                }}>
+                  <motion.div
+                    style={{
+                      height: '100%',
+                      backgroundColor: item.color,
+                      borderRadius: '4px'
+                    }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${item.accuracy}%` }}
+                    transition={{ duration: 1, delay: index * 0.1 }}
+                  />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* System Health */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          style={{
+            ...styles.chartCard,
+            background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 163, 74, 0.1))',
+            border: '1px solid rgba(37, 99, 235, 0.3)'
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '2rem'
+          }}>
+            <div>
+              <h3 style={{
+                color: 'white',
+                fontSize: '1.5rem',
+                fontWeight: 700,
+                margin: '0 0 0.5rem 0'
+              }}>
+                System Health Status
+              </h3>
+              <p style={{
+                color: '#9ca3af',
+                margin: 0
+              }}>
+                All systems operational • Last checked: 2 minutes ago
+              </p>
+            </div>
+            <div style={{
+              display: 'flex',
+              gap: '2rem'
+            }}>
+              {[
+                { label: 'API', status: '99.9%', color: '#16a34a' },
+                { label: 'Database', status: '100%', color: '#16a34a' },
+                { label: 'AI Models', status: '98.7%', color: '#16a34a' },
+                { label: 'Storage', status: '45%', color: '#2563eb' }
+              ].map((item, index) => (
+                <div key={index} style={{ textAlign: 'center' }}>
+                  <p style={{
+                    color: '#9ca3af',
+                    fontSize: '0.75rem',
+                    margin: '0 0 0.5rem 0',
+                    textTransform: 'uppercase'
+                  }}>
+                    {item.label}
+                  </p>
+                  <p style={{
+                    color: item.color,
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    margin: 0
+                  }}>
+                    {item.status}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
   const renderPlaceholder = (title, IconComponent) => {
     if (title === 'Upload Interface') {
       return renderUpload();
     }
     if (title === 'Violations Gallery') {
       return renderViolations();
+    }
+    if (title === 'Advanced Analytics') {
+      return renderAnalytics();
     }
     return (
       <motion.div
